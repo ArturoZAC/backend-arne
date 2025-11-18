@@ -75,66 +75,20 @@ class AuthController extends Controller
         ]);
     }
 
-public function renewToken(Request $request)
-{
-    try {
-        // Obtenemos el user_id desde la request (lo puso el middleware)
-        $userId = $request->attributes->get('user_id');
+    public function refreshToken(Request $request)
+    {
+        $uid = $request->uid; // Lo enviamos desde el middleware
 
-        if (!$userId) {
-            return response()->json([
-                'error' => true,
-                'mensaje' => 'Token no válido o no proporcionado'
-            ], 401);
-        }
+        $auth = (new Factory)
+            ->withServiceAccount(storage_path('app/firebase_credentials.json'))
+            ->createAuth();
 
-        $user = User::find($userId);
-
-        if (!$user) {
-            return response()->json([
-                'error' => true,
-                'mensaje' => 'Usuario no encontrado'
-            ], 404);
-        }
-
-        // Asegurarnos que JWT_TTL sea un entero
-        $ttl = intval(env('JWT_TTL', 3600));
-
-        // Generamos un nuevo token
-        $newPayload = [
-            'iss' => "laravel-jwt",
-            'sub' => $user->id,
-            'iat' => time(),
-            'exp' => time() + $ttl
-        ];
-
-        $newToken = JWT::encode($newPayload, env('JWT_SECRET'), 'HS256');
+        // Crear un token personalizado nuevo
+        $newToken = $auth->createCustomToken($uid)->toString();
 
         return response()->json([
-            'mensaje' => 'Token renovado correctamente',
-            'token' => $newToken,
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email
-            ]
+            'token' => $newToken
         ]);
-    } catch (\Firebase\JWT\ExpiredException $e) {
-        return response()->json([
-            'error' => true,
-            'mensaje' => 'El token ha expirado'
-        ], 401);
-    } catch (\Firebase\JWT\SignatureInvalidException $e) {
-        return response()->json([
-            'error' => true,
-            'mensaje' => 'Firma del token inválida'
-        ], 401);
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => true,
-            'mensaje' => 'Error al renovar token: ' . $e->getMessage()
-        ], 500);
     }
-}
 
 }

@@ -4,36 +4,37 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
+use Firebase\Auth\Token\Exception\InvalidToken;
+use Kreait\Firebase\Factory;
 
 class FirebaseJwtMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        // Obtener el token del header Authorization
-        $token = $request->bearerToken();
+        $authHeader = $request->header('Authorization');
 
-        if (!$token) {
-            return response()->json([
-                'error' => true,
-                'mensaje' => 'Token requerido'
-            ], 401);
+        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
+            return response()->json(['message' => 'Token requerido'], 401);
         }
 
+        $token = substr($authHeader, 7);
+
         try {
-            // Decodificar el token
-            $decoded = JWT::decode($token, new Key(env('JWT_SECRET'), 'HS256'));
+            $auth = (new Factory)
+                ->withServiceAccount(storage_path('app/firebase_credentials.json'))
+                ->createAuth();
 
-            // Guardar el id del usuario en la request
-            $request->attributes->set('user_id', $decoded->sub);
+            $verifiedIdToken = $auth->verifyIdToken($token);
 
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => true,
-                'mensaje' => 'Token inválido',
-                'detalle' => $e->getMessage()
-            ], 401);
+            // Puedes guardar el UID del usuario en el request
+            $request->merge([
+                'uid' => $verifiedIdToken->claims()->get('sub')
+            ]);
+
+        } catch (InvalidToken $e) {
+            return response()->json(['message' => 'Token inválido'], 401);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Error al procesar token'], 401);
         }
 
         return $next($request);
