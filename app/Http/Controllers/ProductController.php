@@ -37,31 +37,34 @@ class ProductController extends Controller
             'Parrafo01' => 'required',
             'Subtitulo01' => 'required',
             'Imagen01' => 'required|image|max:4096',
-
             'Subtitulo02' => 'required',
             'Parrafo02' => 'required',
             'Imagen02' => 'required|image|max:4096',
-
             'Parrafo03' => 'required',
             'BotonLink' => 'required',
         ]);
 
-        $imagen01 = $request->file('Imagen01')->store('products', 'public');
-        $imagen02 = $request->file('Imagen02')->store('products', 'public');
+        // Imagen01
+        $imagen01File = $request->file('Imagen01');
+        $imagen01Name = time().'_'.$imagen01File->getClientOriginalName();
+        $imagen01File->move(public_path('products'), $imagen01Name);
+        $imagen01 = 'products/'.$imagen01Name;
+
+        // Imagen02
+        $imagen02File = $request->file('Imagen02');
+        $imagen02Name = time().'_'.$imagen02File->getClientOriginalName();
+        $imagen02File->move(public_path('products'), $imagen02Name);
+        $imagen02 = 'products/'.$imagen02Name;
 
         $product = Product::create([
             'slug' => $request->slug,
             'Titulo01' => $request->Titulo01,
             'Parrafo01' => $request->Parrafo01,
-            // 'Subtitulo01' => $request->Subtitulo01,
             'Subtitulo01' => $request->input('Subtitulo01'),
             'Imagen01' => $imagen01,
-
-            // 'Subtitulo02' => $request->Subtitulo02,
             'Subtitulo02' => $request->input('Subtitulo02'),
             'Parrafo02' => $request->Parrafo02,
             'Imagen02' => $imagen02,
-
             'Parrafo03' => $request->Parrafo03,
             'BotonLink' => $request->BotonLink,
         ]);
@@ -76,7 +79,6 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
 
-        // validación (sin unique para slug si sigue siendo el mismo)
         $request->validate([
             'slug' => 'required|unique:products,slug,' . $id,
             'Titulo01' => 'required',
@@ -88,17 +90,32 @@ class ProductController extends Controller
             'BotonLink' => 'required',
         ]);
 
-        // IMAGEN 1 OPCIONAL
+        // Imagen01 opcional
         if ($request->hasFile('Imagen01')) {
-            $product->Imagen01 = $request->file('Imagen01')->store('products', 'public');
+            // Eliminar la anterior si existe
+            if ($product->Imagen01 && file_exists(public_path($product->Imagen01))) {
+                unlink(public_path($product->Imagen01));
+            }
+
+            $imagen01File = $request->file('Imagen01');
+            $imagen01Name = time().'_'.$imagen01File->getClientOriginalName();
+            $imagen01File->move(public_path('products'), $imagen01Name);
+            $product->Imagen01 = 'products/'.$imagen01Name;
         }
 
-        // IMAGEN 2 OPCIONAL
+        // Imagen02 opcional
         if ($request->hasFile('Imagen02')) {
-            $product->Imagen02 = $request->file('Imagen02')->store('products', 'public');
+            if ($product->Imagen02 && file_exists(public_path($product->Imagen02))) {
+                unlink(public_path($product->Imagen02));
+            }
+
+            $imagen02File = $request->file('Imagen02');
+            $imagen02Name = time().'_'.$imagen02File->getClientOriginalName();
+            $imagen02File->move(public_path('products'), $imagen02Name);
+            $product->Imagen02 = 'products/'.$imagen02Name;
         }
 
-        // ACTUALIZAR CAMPOS RESTANTES
+        // Actualizar resto de campos
         $product->update($request->except(['Imagen01', 'Imagen02']));
 
         return response()->json($product);
