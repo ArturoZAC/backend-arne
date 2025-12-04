@@ -5,6 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
+    //Probando los commits de este user
     public function up(): void
     {
         Schema::create('products', function (Blueprint $table) {
