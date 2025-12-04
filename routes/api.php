@@ -2,10 +2,8 @@
 
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\TestController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-
 use App\Http\Controllers\AuthController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/usuarios', function () {
     return response()->json([
@@ -17,13 +15,18 @@ Route::get('/usuarios', function () {
     ]);
 });
 
-// Endpoint para registrar usuarios
+// ===========================
+//  AUTH
+// ===========================
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-// Ruta protegida con JWT
 Route::middleware('jwt.auth')->get('/renewToken', [AuthController::class, 'renewToken']);
 Route::get('/prueba', [TestController::class, 'metodo']);
+
+// ===========================
+//  PRODUCTS
+// ===========================
 
 // Crear
 Route::post('/products', [ProductController::class, 'store']);
@@ -31,14 +34,11 @@ Route::post('/products', [ProductController::class, 'store']);
 // Obtener todos
 Route::get('/products', [ProductController::class, 'index']);
 
-// Obtener uno
+// Obtener uno (ID)
 Route::get('/products/{id}', [ProductController::class, 'show']);
 
-// Actualizar (usando POST + _method=PUT)
+// Actualizar (POST porque hosting)
 Route::post('/products/{id}/update', [ProductController::class, 'update']);
 
-// Eliminar (usando POST + _method=DELETE)
+// Eliminar (POST porque hosting)
 Route::post('/products/{id}/delete', [ProductController::class, 'destroy']);
-
-// routes/api.php
-Route::get('/productos/{slug}', [ProductController::class, 'getBySlug']);

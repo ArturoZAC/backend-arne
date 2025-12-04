@@ -4,22 +4,22 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration 
-{
+return new class extends Migration {
     public function up(): void
     {
         Schema::create('products', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('slug')->unique();
-            $table->string('Titulo01');
-            $table->text('Parrafo01');
-            $table->string('Subtitulo01');
-            $table->string('Imagen01');
-            $table->string('Subtitulo02');
-            $table->text('Parrafo02');
-            $table->string('Imagen02');
-            $table->text('Parrafo03');
-            $table->string('BotonLink'); // o ->nullable() si prefieres
+            $table->id(); // ID numérico autoincremental
+
+            $table->string('Titulo01')->nullable();
+            $table->text('Parrafo01')->nullable();
+            $table->string('Subtitulo01')->nullable();
+            $table->string('Imagen01')->nullable();
+            $table->string('Subtitulo02')->nullable();
+            $table->text('Parrafo02')->nullable();
+            $table->string('Imagen02')->nullable();
+            $table->string('Imagen03')->nullable();
+            $table->string('BotonLink')->nullable();
+
             $table->timestamps();
         });
     }
